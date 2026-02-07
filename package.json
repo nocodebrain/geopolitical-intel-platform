@@ -10,10 +10,12 @@
     "db:seed": "tsx scripts/seed-database.ts",
     "db:init": "tsx scripts/seed-database.ts",
     "backfill": "tsx scripts/backfill-historical.ts",
+    "backfill:economy": "tsx scripts/backfill-economic-data.ts",
     "collect": "tsx scripts/collect-live-data.ts",
+    "collect:economy": "tsx scripts/collect-economic-data.ts",
     "analyze": "tsx scripts/ai-analysis.ts",
     "alert": "tsx scripts/send-alerts.ts",
-    "update": "npm run collect && npm run analyze && npm run alert"
+    "update": "npm run collect && npm run collect:economy && npm run analyze && npm run alert"
   },
   "dependencies": {
     "@radix-ui/react-icons": "^1.3.2",

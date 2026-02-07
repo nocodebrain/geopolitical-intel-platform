@@ -13,6 +13,9 @@ import CommodityTracker from '@/components/executive/CommodityTracker';
 import AIStrategicAdvisor from '@/components/executive/AIStrategicAdvisor';
 import RegionalThreatMap from '@/components/executive/RegionalThreatMap';
 import SupplyChainHealth from '@/components/executive/SupplyChainHealth';
+import RecessionRiskMeter from '@/components/executive/RecessionRiskMeter';
+import YieldCurveChart from '@/components/executive/YieldCurveChart';
+import EconomicIndicatorsGrid from '@/components/executive/EconomicIndicatorsGrid';
 
 // Dynamically import map to avoid SSR issues
 const EnhancedWorldMap = dynamic(() => import('@/components/executive/EnhancedWorldMap'), { ssr: false });
@@ -224,11 +227,18 @@ export default function ExecutiveDashboard() {
           </motion.div>
         </div>
 
-        {/* Executive Widgets - Row 1 */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Executive Widgets - Row 1 (with Recession Risk) */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          <RecessionRiskMeter />
           <GlobalRiskScore events={events} />
           <SupplyChainHealth events={events} />
           <CommodityTracker />
+        </div>
+
+        {/* Recession Prediction System - Full Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <YieldCurveChart />
+          <EconomicIndicatorsGrid />
         </div>
 
         {/* AI Strategic Advisor - Full Width */}

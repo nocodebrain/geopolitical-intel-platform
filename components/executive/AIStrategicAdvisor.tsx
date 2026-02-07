@@ -29,11 +29,24 @@ interface AIStrategicAdvisorProps {
 export default function AIStrategicAdvisor({ events }: AIStrategicAdvisorProps) {
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(true);
+  const [recessionRisk, setRecessionRisk] = useState<number>(0);
 
   useEffect(() => {
+    // Fetch recession risk data
+    fetchRecessionRisk();
     // Analyze events and generate strategic recommendations
     generateRecommendations();
   }, [events]);
+
+  const fetchRecessionRisk = async () => {
+    try {
+      const response = await fetch('/api/recession-risk');
+      const data = await response.json();
+      setRecessionRisk(data.riskScore || 0);
+    } catch (error) {
+      console.error('Error fetching recession risk:', error);
+    }
+  };
 
   const generateRecommendations = () => {
     setIsAnalyzing(true);
@@ -54,6 +67,31 @@ export default function AIStrategicAdvisor({ events }: AIStrategicAdvisorProps) 
     });
 
     const recs: Recommendation[] = [];
+
+    // Add recession risk warning if high
+    if (recessionRisk >= 60) {
+      recs.push({
+        id: 'recession-warning',
+        type: 'risk',
+        priority: 'high',
+        title: `Elevated Recession Risk: ${recessionRisk.toFixed(0)}% Risk Score`,
+        description: 'Economic indicators show elevated recession risk. Delay major capex, secure credit lines, build cash reserves, and review supplier contracts for flexibility.',
+        impact: 'Financial Risk: High',
+        timeframe: 'Next 12-18 months',
+        icon: AlertTriangle
+      });
+    } else if (recessionRisk < 30) {
+      recs.push({
+        id: 'expansion-opportunity',
+        type: 'opportunity',
+        priority: 'medium',
+        title: `Low Recession Risk: Strong Economic Conditions`,
+        description: 'Economic indicators show low recession risk. Favorable time for expansion, locking in long-term contracts, and strategic investments.',
+        impact: 'Growth Opportunity: High',
+        timeframe: 'Next 12-24 months',
+        icon: TrendingUp
+      });
+    }
 
     // Generate recommendations based on patterns
     

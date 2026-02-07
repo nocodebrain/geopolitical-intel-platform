@@ -117,6 +117,28 @@ export interface Source {
   updated_at?: string;
 }
 
+export interface EconomicIndicator {
+  id?: number;
+  indicator_name: string;
+  value: number;
+  date: string;
+  source?: string;
+  interpretation?: string;
+  score?: number;
+  metadata?: string; // JSON
+  created_at?: string;
+}
+
+export interface RecessionRiskHistory {
+  id?: number;
+  risk_score: number;
+  prediction: string;
+  indicators_snapshot: string; // JSON
+  recommendation: string;
+  date: string;
+  created_at?: string;
+}
+
 // Event operations
 export function createEvent(event: Event): number {
   const db = getDb();
@@ -446,4 +468,104 @@ export function getStatistics() {
     eventsByCategory,
     eventsByRegion
   };
+}
+
+// Economic Indicators operations
+export function upsertEconomicIndicator(indicator: EconomicIndicator): number {
+  const db = getDb();
+  const stmt = db.prepare(`
+    INSERT INTO economic_indicators (
+      indicator_name, value, date, source, interpretation, score, metadata
+    ) VALUES (?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(indicator_name, date) DO UPDATE SET
+      value = excluded.value,
+      source = excluded.source,
+      interpretation = excluded.interpretation,
+      score = excluded.score,
+      metadata = excluded.metadata,
+      created_at = datetime('now')
+  `);
+  
+  const result = stmt.run(
+    indicator.indicator_name,
+    indicator.value,
+    indicator.date,
+    indicator.source || null,
+    indicator.interpretation || null,
+    indicator.score || null,
+    indicator.metadata || null
+  );
+  
+  return result.lastInsertRowid as number;
+}
+
+export function getLatestEconomicIndicators(): EconomicIndicator[] {
+  const db = getDb();
+  const stmt = db.prepare(`
+    SELECT ei1.* 
+    FROM economic_indicators ei1
+    INNER JOIN (
+      SELECT indicator_name, MAX(date) as max_date
+      FROM economic_indicators
+      GROUP BY indicator_name
+    ) ei2 ON ei1.indicator_name = ei2.indicator_name AND ei1.date = ei2.max_date
+    ORDER BY ei1.indicator_name
+  `);
+  return stmt.all() as EconomicIndicator[];
+}
+
+export function getEconomicIndicatorHistory(indicatorName: string, limit: number = 100): EconomicIndicator[] {
+  const db = getDb();
+  const stmt = db.prepare(`
+    SELECT * FROM economic_indicators
+    WHERE indicator_name = ?
+    ORDER BY date DESC
+    LIMIT ?
+  `);
+  return stmt.all(indicatorName, limit) as EconomicIndicator[];
+}
+
+export function saveRecessionRiskHistory(history: RecessionRiskHistory): number {
+  const db = getDb();
+  const stmt = db.prepare(`
+    INSERT INTO recession_risk_history (
+      risk_score, prediction, indicators_snapshot, recommendation, date
+    ) VALUES (?, ?, ?, ?, ?)
+    ON CONFLICT(date) DO UPDATE SET
+      risk_score = excluded.risk_score,
+      prediction = excluded.prediction,
+      indicators_snapshot = excluded.indicators_snapshot,
+      recommendation = excluded.recommendation,
+      created_at = datetime('now')
+  `);
+  
+  const result = stmt.run(
+    history.risk_score,
+    history.prediction,
+    history.indicators_snapshot,
+    history.recommendation,
+    history.date
+  );
+  
+  return result.lastInsertRowid as number;
+}
+
+export function getRecessionRiskHistory(limit: number = 365): RecessionRiskHistory[] {
+  const db = getDb();
+  const stmt = db.prepare(`
+    SELECT * FROM recession_risk_history
+    ORDER BY date DESC
+    LIMIT ?
+  `);
+  return stmt.all(limit) as RecessionRiskHistory[];
+}
+
+export function getLatestRecessionRisk(): RecessionRiskHistory | undefined {
+  const db = getDb();
+  const stmt = db.prepare(`
+    SELECT * FROM recession_risk_history
+    ORDER BY date DESC
+    LIMIT 1
+  `);
+  return stmt.get() as RecessionRiskHistory | undefined;
 }

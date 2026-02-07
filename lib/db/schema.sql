@@ -119,6 +119,32 @@ CREATE TABLE IF NOT EXISTS shipping_routes (
   updated_at TEXT DEFAULT (datetime('now'))
 );
 
+-- Economic indicators table: Track recession prediction metrics
+CREATE TABLE IF NOT EXISTS economic_indicators (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  indicator_name TEXT NOT NULL, -- yield_curve, pmi, unemployment, etc.
+  value REAL NOT NULL,
+  date TEXT NOT NULL,
+  source TEXT, -- FRED, Trading Economics, etc.
+  interpretation TEXT, -- Good, Concerning, Critical
+  score REAL, -- 0-100 normalized score for risk calculation
+  metadata TEXT, -- JSON: additional data like 2yr vs 10yr values
+  created_at TEXT DEFAULT (datetime('now')),
+  UNIQUE(indicator_name, date)
+);
+
+-- Recession risk history table: Track risk scores over time
+CREATE TABLE IF NOT EXISTS recession_risk_history (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  risk_score REAL NOT NULL, -- 0-100 weighted risk score
+  prediction TEXT, -- e.g., "Recession likely in 12-18 months"
+  indicators_snapshot TEXT NOT NULL, -- JSON: all 10 indicator values
+  recommendation TEXT, -- Strategic advice based on risk level
+  date TEXT NOT NULL,
+  created_at TEXT DEFAULT (datetime('now')),
+  UNIQUE(date)
+);
+
 -- Create indexes for better query performance
 CREATE INDEX IF NOT EXISTS idx_events_date ON events(date DESC);
 CREATE INDEX IF NOT EXISTS idx_events_category ON events(category);
@@ -131,3 +157,6 @@ CREATE INDEX IF NOT EXISTS idx_countries_risk_level ON countries(risk_level);
 CREATE INDEX IF NOT EXISTS idx_insights_date ON insights(date DESC);
 CREATE INDEX IF NOT EXISTS idx_commodity_prices_commodity ON commodity_prices(commodity);
 CREATE INDEX IF NOT EXISTS idx_commodity_prices_date ON commodity_prices(date DESC);
+CREATE INDEX IF NOT EXISTS idx_economic_indicators_name ON economic_indicators(indicator_name);
+CREATE INDEX IF NOT EXISTS idx_economic_indicators_date ON economic_indicators(date DESC);
+CREATE INDEX IF NOT EXISTS idx_recession_risk_date ON recession_risk_history(date DESC);
