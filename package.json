@@ -5,12 +5,16 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "postbuild": "npm run db:seed && npm run collect",
+    "postbuild": "npm run db:seed && npm run backfill && npm run collect && npm run analyze",
     "start": "next start",
     "lint": "eslint",
     "db:seed": "tsx scripts/seed-database.ts",
     "db:init": "tsx scripts/seed-database.ts",
-    "collect": "tsx scripts/collect-live-data.ts"
+    "backfill": "tsx scripts/backfill-historical.ts",
+    "collect": "tsx scripts/collect-live-data.ts",
+    "analyze": "tsx scripts/ai-analysis.ts",
+    "alert": "tsx scripts/send-alerts.ts",
+    "update": "npm run collect && npm run analyze && npm run alert"
   },
   "dependencies": {
     "@radix-ui/react-icons": "^1.3.2",
