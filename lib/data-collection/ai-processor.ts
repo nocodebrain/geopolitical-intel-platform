@@ -1,8 +1,20 @@
 import OpenAI from 'openai';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-});
+// Lazy-load OpenAI client only when API key is available
+let openai: OpenAI | null = null;
+
+function getOpenAIClient(): OpenAI | null {
+  if (openai) return openai;
+  
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    console.log('OpenAI API key not found - using rule-based processing only');
+    return null;
+  }
+  
+  openai = new OpenAI({ apiKey });
+  return openai;
+}
 
 // Cache to avoid redundant API calls
 const cache = new Map<string, any>();
@@ -165,7 +177,9 @@ export async function analyzeEventWithAI(title: string, description: string): Pr
   sentiment: number;
   summary: string;
 }> {
-  if (!process.env.OPENAI_API_KEY) {
+  const client = getOpenAIClient();
+  
+  if (!client) {
     // Fallback to rule-based methods
     const category = await categorizeEvent(title, description);
     const severity = await calculateSeverity(title, description, category);
@@ -203,7 +217,7 @@ Format as JSON:
   "summary": "..."
 }`;
     
-    const response = await openai.chat.completions.create({
+    const response = await client.chat.completions.create({
       model: 'gpt-4o-mini',
       messages: [
         {
@@ -344,7 +358,9 @@ function extractPeople(text: string): string[] {
 
 // Generate daily brief using AI
 export async function generateDailyBrief(events: any[]): Promise<string> {
-  if (!process.env.OPENAI_API_KEY || events.length === 0) {
+  const client = getOpenAIClient();
+  
+  if (!client || events.length === 0) {
     return `No significant geopolitical events to report today.`;
   }
   
@@ -368,7 +384,7 @@ Focus on:
 
 Keep it actionable and business-focused.`;
     
-    const response = await openai.chat.completions.create({
+    const response = await client.chat.completions.create({
       model: 'gpt-4o-mini',
       messages: [
         {
