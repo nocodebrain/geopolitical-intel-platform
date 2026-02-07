@@ -1,0 +1,7 @@
+# Railway ignore file
+node_modules/
+.git/
+.next/
+data/*.db
+data/*.db-*
+*.log
