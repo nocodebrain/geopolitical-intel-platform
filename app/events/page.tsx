@@ -101,16 +101,16 @@ export default function EventsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+        <h1 className="text-3xl font-bold text-slate-100">
           Events Timeline
         </h1>
-        <p className="text-slate-400 mt-1">
+        <p className="text-slate-400 mt-2 text-base">
           Comprehensive view of geopolitical events
         </p>
       </div>
 
       {/* Search and Filters */}
-      <div className="bg-slate-900/50 backdrop-blur border border-slate-800 rounded-lg p-6">
+      <div className="bg-slate-900 border border-slate-800 rounded-lg p-6">
         {/* Search Bar */}
         <div className="mb-4">
           <div className="relative">
@@ -203,15 +203,15 @@ export default function EventsPage() {
       {/* Events Timeline */}
       <div className="space-y-4">
         {filteredEvents.length === 0 ? (
-          <div className="bg-slate-900/50 backdrop-blur border border-slate-800 rounded-lg p-12 text-center">
-            <p className="text-slate-400">No events match your filters</p>
+          <div className="bg-slate-900 border border-slate-800 rounded-lg p-12 text-center">
+            <p className="text-slate-400 text-base">No events match your filters</p>
           </div>
         ) : (
           filteredEvents.map((event) => (
             <div
               key={event.id}
               onClick={() => window.location.href = `/events/${event.id}`}
-              className="bg-slate-900/50 backdrop-blur border border-slate-800 rounded-lg p-6 hover:border-slate-700 hover:bg-slate-900/70 transition-all cursor-pointer"
+              className="bg-slate-900 border border-slate-800 rounded-lg p-6 hover:border-slate-700 transition-colors cursor-pointer"
             >
               <div className="flex items-start justify-between mb-3">
                 <div className="flex-1">
