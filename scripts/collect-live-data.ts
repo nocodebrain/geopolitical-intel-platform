@@ -6,7 +6,7 @@
  * Or schedule with cron: 0 * * * * (every hour)
  */
 
-import { getEvents, createEvent, createConnection, updateSource } from '../lib/db';
+import { getEvents, createEvent, createConnection, updateSourceStatus } from '../lib/db';
 import Parser from 'rss-parser';
 
 const parser = new Parser({
@@ -217,7 +217,7 @@ async function collectFromRSS(): Promise<any[]> {
       }
       
       // Update source last_scraped
-      updateSource(source.id, { last_scraped: new Date().toISOString() });
+      updateSourceStatus(source.name, 'active');
       
       console.log(`  ✅ Found ${events.filter(e => e.source === source.name).length} events`);
       
