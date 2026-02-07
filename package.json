@@ -5,7 +5,6 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "postbuild": "npm run db:seed && npm run backfill && npm run collect && npm run analyze",
     "start": "next start",
     "lint": "eslint",
     "db:seed": "tsx scripts/seed-database.ts",
