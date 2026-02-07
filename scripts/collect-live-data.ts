@@ -71,26 +71,27 @@ const COUNTRIES = [
   'Afghanistan', 'Iraq', 'Yemen', 'Lebanon', 'Venezuela'
 ];
 
-// Severity scoring
-function calculateSeverity(title: string, description: string): 'low' | 'medium' | 'high' | 'critical' {
+// Severity scoring (1-10 scale)
+function calculateSeverity(title: string, description: string): number {
   const text = (title + ' ' + description).toLowerCase();
   
-  // Critical: war, invasion, nuclear, major disasters
+  // Critical: war, invasion, nuclear, major disasters (9-10)
   if (text.match(/war|invasion|nuclear|major attack|coup|assassination/i)) {
-    return 'critical';
+    return 9;
   }
   
-  // High: conflict, sanctions, major disruptions
+  // High: conflict, sanctions, major disruptions (7-8)
   if (text.match(/conflict|sanctions|strike|disruption|crisis|emergency/i)) {
-    return 'high';
+    return 7;
   }
   
-  // Medium: political changes, economic shifts
+  // Medium: political changes, economic shifts (4-6)
   if (text.match(/election|trade|tariff|protest|policy/i)) {
-    return 'medium';
+    return 5;
   }
   
-  return 'low';
+  // Low: general news (1-3)
+  return 3;
 }
 
 // Categorize event
