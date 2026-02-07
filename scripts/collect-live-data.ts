@@ -6,7 +6,7 @@
  * Or schedule with cron: 0 * * * * (every hour)
  */
 
-import { getAllEvents, createEvent, createConnection, updateSource } from '../lib/db';
+import { getEvents, createEvent, createConnection, updateSource } from '../lib/db';
 import Parser from 'rss-parser';
 
 const parser = new Parser({
@@ -231,7 +231,7 @@ async function collectFromRSS(): Promise<any[]> {
 
 // Save events to database (deduplicate by title)
 async function saveEvents(events: any[]): Promise<void> {
-  const existing = getAllEvents({ limit: 1000 });
+  const existing = getEvents({ limit: 1000 });
   const existingTitles = new Set(existing.map((e: any) => e.title.toLowerCase()));
   
   let newCount = 0;
