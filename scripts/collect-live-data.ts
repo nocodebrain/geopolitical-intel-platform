@@ -7,6 +7,7 @@
  */
 
 import { getEvents, createEvent, createConnection, updateSourceStatus } from '../lib/db';
+import { collectFromExpandedSources } from '../lib/data-collection/expanded-news-sources';
 import Parser from 'rss-parser';
 
 const parser = new Parser({
@@ -256,18 +257,15 @@ async function saveEvents(events: any[]): Promise<void> {
 
 // Main execution
 async function main() {
-  console.log('🌍 Geopolitical Intelligence - Live Data Collection\n');
+  console.log('🌍 Geopolitical Intelligence - Live Data Collection (EXECUTIVE GRADE)\n');
   console.log(`Started: ${new Date().toISOString()}\n`);
   
   try {
-    // Collect from RSS feeds
-    const events = await collectFromRSS();
+    // Use expanded premium sources
+    console.log('🎯 Using EXPANDED PREMIUM SOURCES (15+ feeds)...\n');
+    const collectedCount = await collectFromExpandedSources();
     
-    console.log(`\n📊 Total events collected: ${events.length}`);
-    
-    // Save to database
-    await saveEvents(events);
-    
+    console.log(`\n📊 Total events collected: ${collectedCount}`);
     console.log('\n✅ Collection complete!');
     console.log(`\nFinished: ${new Date().toISOString()}`);
     

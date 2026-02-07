@@ -302,8 +302,8 @@ async function backfillHistoricalData(): Promise<void> {
       createEvent({
         ...event,
         source_url: 'historical://database',
-        entities: null,
-        sentiment_score: null
+        entities: undefined,
+        sentiment_score: undefined
       });
       inserted++;
       console.log(`  ✅ Added: ${event.title.substring(0, 60)}...`);

@@ -2,10 +2,20 @@
 
 import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
-import { Activity, AlertTriangle, TrendingUp, Globe2 } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Toaster } from 'react-hot-toast';
+import { Activity, RefreshCw, Zap } from 'lucide-react';
+import { useAutoRefresh } from '@/lib/hooks/useAutoRefresh';
 
-// Dynamically import the map component to avoid SSR issues
-const WorldMap = dynamic(() => import('@/components/WorldMap'), { ssr: false });
+// Executive Components
+import GlobalRiskScore from '@/components/executive/GlobalRiskScore';
+import CommodityTracker from '@/components/executive/CommodityTracker';
+import AIStrategicAdvisor from '@/components/executive/AIStrategicAdvisor';
+import RegionalThreatMap from '@/components/executive/RegionalThreatMap';
+import SupplyChainHealth from '@/components/executive/SupplyChainHealth';
+
+// Dynamically import map to avoid SSR issues
+const EnhancedWorldMap = dynamic(() => import('@/components/executive/EnhancedWorldMap'), { ssr: false });
 
 interface Event {
   id: number;
@@ -16,14 +26,10 @@ interface Event {
   region: string;
   country: string;
   date: string;
+  latitude?: number;
+  longitude?: number;
   sentiment_score?: number;
   impact_tags?: string;
-}
-
-interface Insight {
-  title: string;
-  content: string;
-  date: string;
 }
 
 interface Stats {
@@ -35,43 +41,40 @@ interface Stats {
   eventsByRegion: Array<{ region: string; count: number }>;
 }
 
-export default function Dashboard() {
+export default function ExecutiveDashboard() {
   const [events, setEvents] = useState<Event[]>([]);
-  const [dailyBrief, setDailyBrief] = useState<Insight | null>(null);
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        // Fetch top events
-        const eventsRes = await fetch('/api/events?limit=20');
-        const eventsData = await eventsRes.json();
-        setEvents(eventsData.events || []);
+  const fetchDashboardData = async () => {
+    try {
+      const [eventsRes, statsRes] = await Promise.all([
+        fetch('/api/events?limit=100'),
+        fetch('/api/stats')
+      ]);
 
-        // Fetch daily brief
-        const briefRes = await fetch('/api/insights?category=daily_brief');
-        const briefData = await briefRes.json();
-        setDailyBrief(briefData.insight || null);
+      const eventsData = await eventsRes.json();
+      const statsData = await statsRes.json();
 
-        // Fetch statistics
-        const statsRes = await fetch('/api/stats');
-        const statsData = await statsRes.json();
-        setStats(statsData);
-
-        setLoading(false);
-      } catch (error) {
-        console.error('Error fetching dashboard data:', error);
-        setLoading(false);
-      }
+      setEvents(eventsData.events || []);
+      setStats(statsData);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+      setLoading(false);
     }
+  };
 
-    fetchData();
+  useEffect(() => {
+    fetchDashboardData();
   }, []);
 
-  const topEvents = events
-    .sort((a, b) => b.severity - a.severity)
-    .slice(0, 10);
+  // Auto-refresh every 1 hour
+  const { isRefreshing, refresh, getTimeAgo } = useAutoRefresh({
+    interval: 60 * 60 * 1000, // 1 hour
+    onRefresh: fetchDashboardData,
+    enableToast: true
+  });
 
   const criticalEvents = events.filter(e => e.severity >= 8);
 
@@ -79,216 +82,236 @@ export default function Dashboard() {
     return (
       <div className="flex items-center justify-center h-[80vh]">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-slate-400">Loading intelligence data...</p>
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+            className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"
+          />
+          <p className="text-slate-400">Loading executive intelligence...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
-            Strategic Intelligence Dashboard
-          </h1>
-          <p className="text-slate-400 mt-1">
-            Real-time geopolitical insights for construction & logistics
-          </p>
-        </div>
-        <div className="text-right text-sm text-slate-400">
-          <p>Last updated: {new Date().toLocaleString()}</p>
-        </div>
-      </div>
-
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-slate-900/50 backdrop-blur border border-slate-800 rounded-lg p-4">
-          <div className="flex items-center justify-between">
+    <>
+      <Toaster position="top-right" />
+      
+      <div className="space-y-6 pb-12">
+        {/* Executive Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900/90 via-slate-900/80 to-slate-800/90 backdrop-blur-xl border border-slate-700/50 p-8"
+        >
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-pink-500/5"></div>
+          
+          <div className="relative flex items-center justify-between">
             <div>
-              <p className="text-sm text-slate-400">Total Events</p>
-              <p className="text-2xl font-bold text-blue-400">{stats?.totalEvents || 0}</p>
-            </div>
-            <Activity className="w-8 h-8 text-blue-500 opacity-50" />
-          </div>
-        </div>
-
-        <div className="bg-slate-900/50 backdrop-blur border border-slate-800 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-slate-400">Critical Events</p>
-              <p className="text-2xl font-bold text-red-400">{stats?.criticalEvents || 0}</p>
-            </div>
-            <AlertTriangle className="w-8 h-8 text-red-500 opacity-50" />
-          </div>
-        </div>
-
-        <div className="bg-slate-900/50 backdrop-blur border border-slate-800 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-slate-400">Connections</p>
-              <p className="text-2xl font-bold text-purple-400">{stats?.totalConnections || 0}</p>
-            </div>
-            <TrendingUp className="w-8 h-8 text-purple-500 opacity-50" />
-          </div>
-        </div>
-
-        <div className="bg-slate-900/50 backdrop-blur border border-slate-800 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-slate-400">Countries Monitored</p>
-              <p className="text-2xl font-bold text-green-400">{stats?.totalCountries || 0}</p>
-            </div>
-            <Globe2 className="w-8 h-8 text-green-500 opacity-50" />
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Daily Brief */}
-        <div className="lg:col-span-1">
-          <div className="bg-slate-900/50 backdrop-blur border border-slate-800 rounded-lg p-6">
-            <h2 className="text-lg font-semibold mb-4 flex items-center">
-              <span className="w-2 h-2 bg-blue-500 rounded-full mr-2 animate-pulse"></span>
-              Daily Intelligence Brief
-            </h2>
-            {dailyBrief ? (
-              <div className="prose prose-invert prose-sm max-w-none">
-                <div className="text-slate-300 whitespace-pre-wrap">
-                  {dailyBrief.content}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.2 }}
+                className="flex items-center gap-3 mb-3"
+              >
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                  <Zap className="w-6 h-6 text-white" />
                 </div>
-                <p className="text-xs text-slate-500 mt-4">
-                  Generated: {new Date(dailyBrief.date).toLocaleString()}
-                </p>
+                <div>
+                  <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+                    Executive Intelligence Platform
+                  </h1>
+                  <p className="text-slate-400 mt-1">
+                    Real-time geopolitical insights for strategic decision-making
+                  </p>
+                </div>
+              </motion.div>
+            </div>
+
+            <div className="text-right">
+              <div className="flex items-center gap-3 mb-2">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={refresh}
+                  disabled={isRefreshing}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+                >
+                  <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                  {isRefreshing ? 'Refreshing...' : 'Refresh'}
+                </motion.button>
               </div>
-            ) : (
-              <p className="text-slate-400 text-sm">No brief available</p>
-            )}
+              <div className="text-sm text-slate-400">
+                <div className="flex items-center gap-2 justify-end">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  Last updated: {getTimeAgo()}
+                </div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Key Metrics Row */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-900/90 to-slate-800/90 backdrop-blur-xl border border-slate-700/50 p-6"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-blue-500/0"></div>
+            <div className="relative">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm text-slate-400">Total Events</p>
+                <Activity className="w-5 h-5 text-blue-500 opacity-50" />
+              </div>
+              <p className="text-3xl font-bold text-blue-400">{stats?.totalEvents || 0}</p>
+              <p className="text-xs text-slate-500 mt-1">Active intelligence items</p>
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+            className="relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-900/90 to-slate-800/90 backdrop-blur-xl border border-slate-700/50 p-6"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-red-500/0"></div>
+            <div className="relative">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm text-slate-400">Critical Alerts</p>
+                <div className="w-5 h-5 rounded-full bg-red-500/20 flex items-center justify-center">
+                  <span className="text-xs font-bold text-red-400">!</span>
+                </div>
+              </div>
+              <p className="text-3xl font-bold text-red-400">{stats?.criticalEvents || 0}</p>
+              <p className="text-xs text-slate-500 mt-1">Severity 8+ events</p>
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-900/90 to-slate-800/90 backdrop-blur-xl border border-slate-700/50 p-6"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-purple-500/0"></div>
+            <div className="relative">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm text-slate-400">Connections</p>
+                <div className="w-5 h-5 text-purple-500 opacity-50">⚡</div>
+              </div>
+              <p className="text-3xl font-bold text-purple-400">{stats?.totalConnections || 0}</p>
+              <p className="text-xs text-slate-500 mt-1">Event relationships</p>
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.25 }}
+            className="relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-900/90 to-slate-800/90 backdrop-blur-xl border border-slate-700/50 p-6"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-green-500/0"></div>
+            <div className="relative">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm text-slate-400">Countries</p>
+                <div className="text-xl opacity-50">🌍</div>
+              </div>
+              <p className="text-3xl font-bold text-green-400">{stats?.totalCountries || 0}</p>
+              <p className="text-xs text-slate-500 mt-1">Under monitoring</p>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Executive Widgets - Row 1 */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <GlobalRiskScore events={events} />
+          <SupplyChainHealth events={events} />
+          <CommodityTracker />
+        </div>
+
+        {/* AI Strategic Advisor - Full Width */}
+        <AIStrategicAdvisor events={events} />
+
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+          {/* Regional Threat Map */}
+          <div className="lg:col-span-2">
+            <RegionalThreatMap events={events} />
           </div>
 
-          {/* Critical Alerts */}
-          {criticalEvents.length > 0 && (
-            <div className="bg-red-950/30 backdrop-blur border border-red-900/50 rounded-lg p-6 mt-6">
-              <h2 className="text-lg font-semibold mb-4 text-red-400 flex items-center">
-                <AlertTriangle className="w-5 h-5 mr-2" />
-                Critical Alerts
+          {/* Interactive World Map */}
+          <div className="lg:col-span-3">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-900/90 to-slate-800/90 backdrop-blur-xl border border-slate-700/50 p-6"
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-purple-500/5"></div>
+              
+              <div className="relative">
+                <h2 className="text-lg font-semibold mb-4 flex items-center">
+                  <span className="w-2 h-2 bg-blue-500 rounded-full mr-2 animate-pulse"></span>
+                  Global Event Map
+                </h2>
+                <div className="h-[600px] rounded-lg overflow-hidden">
+                  <EnhancedWorldMap events={events} />
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+
+        {/* Critical Events Feed */}
+        {criticalEvents.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="relative overflow-hidden rounded-xl bg-gradient-to-br from-red-950/40 to-slate-900/90 backdrop-blur-xl border border-red-900/50 p-6"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-transparent"></div>
+            
+            <div className="relative">
+              <h2 className="text-lg font-semibold text-red-400 mb-4 flex items-center">
+                <span className="w-2 h-2 bg-red-500 rounded-full mr-2 animate-pulse"></span>
+                Critical Events Requiring Attention
               </h2>
-              <div className="space-y-3">
-                {criticalEvents.map((event) => (
-                  <div key={event.id} className="border-l-2 border-red-500 pl-3">
-                    <p className="text-sm font-medium text-slate-200">{event.title}</p>
-                    <p className="text-xs text-slate-400 mt-1">
-                      {event.region} • Severity: {event.severity}/10
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {criticalEvents.slice(0, 6).map((event, index) => (
+                  <motion.div
+                    key={event.id}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.1 * index }}
+                    className="bg-slate-900/50 rounded-lg p-4 border border-red-900/30 hover:border-red-700/50 transition-colors cursor-pointer"
+                    onClick={() => window.location.href = `/events/${event.id}`}
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <span className="px-2 py-1 bg-red-500/20 text-red-400 rounded text-xs font-bold">
+                        {event.severity}/10
+                      </span>
+                      <span className="text-xs text-slate-500">{event.region}</span>
+                    </div>
+                    <h3 className="font-semibold text-slate-200 text-sm mb-2 line-clamp-2">
+                      {event.title}
+                    </h3>
+                    <p className="text-xs text-slate-400 line-clamp-2 mb-2">
+                      {event.description}
                     </p>
-                  </div>
+                    <div className="text-xs text-slate-600">
+                      {new Date(event.date).toLocaleDateString()}
+                    </div>
+                  </motion.div>
                 ))}
               </div>
             </div>
-          )}
-        </div>
-
-        {/* World Map */}
-        <div className="lg:col-span-2">
-          <div className="bg-slate-900/50 backdrop-blur border border-slate-800 rounded-lg p-6">
-            <h2 className="text-lg font-semibold mb-4">Global Risk Map</h2>
-            <div className="h-[500px] rounded-lg overflow-hidden">
-              <WorldMap events={events} />
-            </div>
-          </div>
-        </div>
+          </motion.div>
+        )}
       </div>
-
-      {/* Top Developing Situations */}
-      <div className="bg-slate-900/50 backdrop-blur border border-slate-800 rounded-lg p-6">
-        <h2 className="text-lg font-semibold mb-4">Top 10 Developing Situations</h2>
-        <div className="space-y-3">
-          {topEvents.map((event, index) => (
-            <div
-              key={event.id}
-              className="flex items-start space-x-4 p-4 rounded-lg bg-slate-800/30 hover:bg-slate-800/50 transition-colors cursor-pointer"
-              onClick={() => window.location.href = `/events/${event.id}`}
-            >
-              <div className="flex-shrink-0">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                  event.severity >= 8 ? 'bg-red-500/20 text-red-400' :
-                  event.severity >= 6 ? 'bg-orange-500/20 text-orange-400' :
-                  event.severity >= 4 ? 'bg-yellow-500/20 text-yellow-400' :
-                  'bg-green-500/20 text-green-400'
-                }`}>
-                  {index + 1}
-                </div>
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between mb-1">
-                  <h3 className="font-medium text-slate-200 truncate">{event.title}</h3>
-                  <span className={`ml-2 px-2 py-1 text-xs rounded-full ${
-                    event.severity >= 8 ? 'bg-red-500/20 text-red-400' :
-                    event.severity >= 6 ? 'bg-orange-500/20 text-orange-400' :
-                    event.severity >= 4 ? 'bg-yellow-500/20 text-yellow-400' :
-                    'bg-green-500/20 text-green-400'
-                  }`}>
-                    {event.severity}/10
-                  </span>
-                </div>
-                <p className="text-sm text-slate-400 line-clamp-2">{event.description}</p>
-                <div className="flex items-center space-x-3 mt-2 text-xs text-slate-500">
-                  <span className="px-2 py-0.5 bg-slate-700/50 rounded">{event.category}</span>
-                  <span>{event.region}</span>
-                  <span>{new Date(event.date).toLocaleDateString()}</span>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Category Distribution */}
-      {stats && stats.eventsByCategory.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-slate-900/50 backdrop-blur border border-slate-800 rounded-lg p-6">
-            <h2 className="text-lg font-semibold mb-4">Events by Category</h2>
-            <div className="space-y-3">
-              {stats.eventsByCategory.map((item) => (
-                <div key={item.category}>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="text-slate-300">{item.category}</span>
-                    <span className="text-slate-400">{item.count}</span>
-                  </div>
-                  <div className="w-full bg-slate-800 rounded-full h-2">
-                    <div
-                      className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all"
-                      style={{ width: `${(item.count / stats.totalEvents) * 100}%` }}
-                    ></div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="bg-slate-900/50 backdrop-blur border border-slate-800 rounded-lg p-6">
-            <h2 className="text-lg font-semibold mb-4">Events by Region</h2>
-            <div className="space-y-3">
-              {stats.eventsByRegion.map((item) => (
-                <div key={item.region}>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="text-slate-300">{item.region}</span>
-                    <span className="text-slate-400">{item.count}</span>
-                  </div>
-                  <div className="w-full bg-slate-800 rounded-full h-2">
-                    <div
-                      className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all"
-                      style={{ width: `${(item.count / stats.totalEvents) * 100}%` }}
-                    ></div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+    </>
   );
 }
