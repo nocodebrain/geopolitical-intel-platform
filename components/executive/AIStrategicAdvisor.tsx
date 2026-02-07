@@ -1,6 +1,5 @@
 'use client';
 
-import { motion } from 'framer-motion';
 import { Brain, Lightbulb, Shield, TrendingUp, AlertTriangle, CheckCircle } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
@@ -32,9 +31,7 @@ export default function AIStrategicAdvisor({ events }: AIStrategicAdvisorProps) 
   const [recessionRisk, setRecessionRisk] = useState<number>(0);
 
   useEffect(() => {
-    // Fetch recession risk data
     fetchRecessionRisk();
-    // Analyze events and generate strategic recommendations
     generateRecommendations();
   }, [events]);
 
@@ -60,10 +57,6 @@ export default function AIStrategicAdvisor({ events }: AIStrategicAdvisorProps) 
     const commodityEvents = events.filter(e => {
       const tags = e.impact_tags ? JSON.parse(e.impact_tags) : [];
       return tags.includes('materials-pricing') || tags.includes('cost-impact');
-    });
-    const opportunityEvents = events.filter(e => {
-      const tags = e.impact_tags ? JSON.parse(e.impact_tags) : [];
-      return tags.includes('opportunity');
     });
 
     const recs: Recommendation[] = [];
@@ -93,8 +86,6 @@ export default function AIStrategicAdvisor({ events }: AIStrategicAdvisorProps) 
       });
     }
 
-    // Generate recommendations based on patterns
-    
     // Red Sea / Shipping disruptions
     if (supplyChainEvents.some(e => e.title.toLowerCase().includes('red sea') || e.title.toLowerCase().includes('suez'))) {
       recs.push({
@@ -103,7 +94,7 @@ export default function AIStrategicAdvisor({ events }: AIStrategicAdvisorProps) 
         priority: 'high',
         title: 'Red Sea Disruptions: Lock in Freight Rates',
         description: 'Ongoing Red Sea tensions are causing shipping delays and rate increases. Freight costs expected to surge 25-35% in Q2.',
-        impact: 'Cost Impact: High | Timeline: Immediate',
+        impact: 'Cost Impact: High',
         timeframe: 'Next 30 days',
         icon: Shield
       });
@@ -191,16 +182,16 @@ export default function AIStrategicAdvisor({ events }: AIStrategicAdvisorProps) 
     }
 
     setTimeout(() => {
-      setRecommendations(recs.slice(0, 5)); // Top 5 recommendations
+      setRecommendations(recs.slice(0, 5));
       setIsAnalyzing(false);
-    }, 1500);
+    }, 800);
   };
 
-  const getPriorityColor = (priority: string) => {
+  const getPriorityBg = (priority: string) => {
     switch (priority) {
-      case 'high': return 'text-red-400 bg-red-500/20 border-red-500/50';
-      case 'medium': return 'text-yellow-400 bg-yellow-500/20 border-yellow-500/50';
-      case 'low': return 'text-blue-400 bg-blue-500/20 border-blue-500/50';
+      case 'high': return 'bg-red-600';
+      case 'medium': return 'bg-yellow-600';
+      case 'low': return 'bg-blue-600';
     }
   };
 
@@ -212,115 +203,92 @@ export default function AIStrategicAdvisor({ events }: AIStrategicAdvisorProps) 
     }
   };
 
+  const getTypeBg = (type: string) => {
+    switch (type) {
+      case 'opportunity': return 'bg-green-950 border-green-900';
+      case 'risk': return 'bg-red-950 border-red-900';
+      case 'action': return 'bg-blue-950 border-blue-900';
+    }
+  };
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.2 }}
-      className="relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-900/90 to-slate-800/90 backdrop-blur-xl border border-slate-700/50 p-6"
-    >
-      <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-pink-500/5"></div>
-      
-      <div className="relative">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-              <Brain className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider">
-                AI Strategic Advisor
-              </h3>
-              <p className="text-xs text-slate-500">Executive recommendations</p>
-            </div>
+    <div className="bg-slate-900 border border-slate-800 rounded-lg p-6">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded bg-purple-600 flex items-center justify-center">
+            <Brain className="w-5 h-5 text-white" />
           </div>
-          {isAnalyzing && (
-            <div className="flex items-center gap-2 text-xs text-purple-400">
-              <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
-              Analyzing...
-            </div>
-          )}
+          <div>
+            <h3 className="text-base font-bold text-slate-100">
+              AI Strategic Advisor
+            </h3>
+            <p className="text-xs text-slate-500">Executive recommendations</p>
+          </div>
         </div>
-
-        {isAnalyzing ? (
-          <div className="space-y-3">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="h-24 bg-slate-800/40 rounded-lg animate-pulse"></div>
-            ))}
+        {isAnalyzing && (
+          <div className="flex items-center gap-2 text-xs text-purple-400">
+            <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
+            Analyzing...
           </div>
-        ) : (
-          <div className="space-y-3">
-            {recommendations.map((rec, index) => {
-              const Icon = rec.icon;
-              return (
-                <motion.div
-                  key={rec.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.1 * index }}
-                  className="group relative bg-slate-800/40 rounded-lg p-4 hover:bg-slate-800/60 transition-all cursor-pointer border border-transparent hover:border-slate-600"
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="flex-shrink-0">
-                      <div className={`w-8 h-8 rounded-lg ${
-                        rec.type === 'opportunity' ? 'bg-green-500/20 text-green-400' :
-                        rec.type === 'risk' ? 'bg-red-500/20 text-red-400' :
-                        'bg-blue-500/20 text-blue-400'
-                      } flex items-center justify-center text-lg`}>
-                        {getTypeIcon(rec.type)}
-                      </div>
-                    </div>
-
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2 mb-2">
-                        <h4 className="font-semibold text-slate-200 text-sm leading-tight">
-                          {rec.title}
-                        </h4>
-                        <span className={`flex-shrink-0 px-2 py-0.5 text-xs rounded-full border ${getPriorityColor(rec.priority)}`}>
-                          {rec.priority.toUpperCase()}
-                        </span>
-                      </div>
-
-                      <p className="text-xs text-slate-400 mb-3 leading-relaxed">
-                        {rec.description}
-                      </p>
-
-                      <div className="flex items-center gap-4 text-xs">
-                        <div className="flex items-center gap-1 text-slate-500">
-                          <Icon className="w-3 h-3" />
-                          <span>{rec.impact}</span>
-                        </div>
-                        <div className="text-slate-600">•</div>
-                        <div className="text-slate-500">{rec.timeframe}</div>
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
-        )}
-
-        {!isAnalyzing && recommendations.length === 0 && (
-          <div className="text-center py-8">
-            <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-3 opacity-50" />
-            <p className="text-sm text-slate-400">All systems nominal. No critical actions required.</p>
-          </div>
-        )}
-
-        {!isAnalyzing && recommendations.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            className="mt-4 text-center"
-          >
-            <button className="text-xs text-purple-400 hover:text-purple-300 transition-colors">
-              View Full Analysis Report →
-            </button>
-          </motion.div>
         )}
       </div>
-    </motion.div>
+
+      {isAnalyzing ? (
+        <div className="space-y-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-24 bg-slate-950 border border-slate-800 rounded animate-pulse"></div>
+          ))}
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {recommendations.map((rec) => {
+            const Icon = rec.icon;
+            return (
+              <div
+                key={rec.id}
+                className={`border rounded-lg p-4 hover:border-slate-700 transition-colors ${getTypeBg(rec.type)}`}
+              >
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0 text-2xl mt-0.5">
+                    {getTypeIcon(rec.type)}
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <h4 className="font-bold text-slate-100 text-sm leading-tight">
+                        {rec.title}
+                      </h4>
+                      <span className={`flex-shrink-0 px-2 py-0.5 text-xs font-bold rounded text-white uppercase tracking-wide ${getPriorityBg(rec.priority)}`}>
+                        {rec.priority}
+                      </span>
+                    </div>
+
+                    <p className="text-sm text-slate-300 mb-3 leading-relaxed">
+                      {rec.description}
+                    </p>
+
+                    <div className="flex items-center gap-4 text-xs text-slate-400">
+                      <div className="flex items-center gap-1">
+                        <Icon className="w-3 h-3" />
+                        <span>{rec.impact}</span>
+                      </div>
+                      <div>•</div>
+                      <div>{rec.timeframe}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {!isAnalyzing && recommendations.length === 0 && (
+        <div className="text-center py-8">
+          <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-3 opacity-50" />
+          <p className="text-sm text-slate-400">All systems nominal. No critical actions required.</p>
+        </div>
+      )}
+    </div>
   );
 }
