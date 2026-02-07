@@ -100,11 +100,12 @@ export default function ExecutiveDashboard() {
         <div className="bg-slate-900 border border-slate-800 rounded-lg p-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-slate-100 mb-2">
-                Executive Intelligence Dashboard
+              <h1 className="text-3xl font-bold text-slate-100 mb-2 flex items-center gap-3">
+                <span className="text-4xl">🇦🇺</span>
+                Australian Business Intelligence Dashboard
               </h1>
               <p className="text-slate-400 text-base">
-                Real-time geopolitical insights for strategic decision-making
+                Geopolitical intelligence from an Australian perspective • Focused on construction, logistics, procurement & mining
               </p>
             </div>
 

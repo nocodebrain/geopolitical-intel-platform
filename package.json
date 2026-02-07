@@ -13,11 +13,12 @@
     "db:init-startup": "tsx scripts/init-on-startup.ts",
     "backfill": "tsx scripts/backfill-historical.ts",
     "backfill:economy": "tsx scripts/backfill-economic-data.ts",
-    "collect": "tsx scripts/collect-live-data.ts",
-    "collect:economy": "tsx scripts/collect-economic-data.ts",
+    "collect": "tsx scripts/collect-australian-intel.ts",
+    "collect:economy": "tsx scripts/collect-australian-economic-data.ts",
+    "collect:old": "tsx scripts/collect-live-data.ts",
     "analyze": "tsx scripts/ai-analysis.ts",
     "alert": "tsx scripts/send-alerts.ts",
-    "update": "npm run collect && npm run collect:economy && npm run analyze && npm run alert"
+    "update": "npm run collect && npm run collect:economy && npm run analyze"
   },
   "dependencies": {
     "@radix-ui/react-icons": "^1.3.2",
