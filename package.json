@@ -5,10 +5,12 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "postbuild": "tsx scripts/init-on-startup.ts",
     "start": "next start",
     "lint": "eslint",
     "db:seed": "tsx scripts/seed-database.ts",
     "db:init": "tsx scripts/seed-database.ts",
+    "db:init-startup": "tsx scripts/init-on-startup.ts",
     "backfill": "tsx scripts/backfill-historical.ts",
     "backfill:economy": "tsx scripts/backfill-economic-data.ts",
     "collect": "tsx scripts/collect-live-data.ts",
