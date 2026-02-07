@@ -268,7 +268,7 @@ async function collectEconomicData() {
         source: FRED_API_KEY ? 'FRED' : 'Mock',
         interpretation,
         score,
-        metadata: indicator.fredSeriesId ? JSON.stringify({ series_id: indicator.fredSeriesId }) : null
+        metadata: indicator.fredSeriesId ? JSON.stringify({ series_id: indicator.fredSeriesId }) : undefined
       });
 
       collectedIndicators.push({
